@@ -20,21 +20,18 @@ var server = http.createServer(function (req,res) {
 	var filepath = (req.url === "/") ? ("./index.html") : ("." + req.url);
 	var contentType = mimes[path.extname(filepath)] || "text/plain" ;
 
-
 	// check for file exist or not
 	fs.exists(filepath,function (file_exists) {
 		if(file_exists){
 			// Read and Server
-			fs.readFile(filepath,"utf-8",function (error,content) {
-				if(error){
-					res.writeHead(500);
-					res.end("internal server error");
-				}else{
-					res.writeHead(200,{
-						"Content-Type": contentType});
-					res.end(content,"utf-8");
-				}
+			res.writeHead(200,{"Content-Type":contentType});
+			var streamfile = fs.createReadStream(filepath).pipe(res);
+
+			streamfile.on('error',function () {
+				res.writeHead(500);
+				res.end();
 			});
+
 		}else{
 			res.writeHead(404);
 			res.end("File not found");
